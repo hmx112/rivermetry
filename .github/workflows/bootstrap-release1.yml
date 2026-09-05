@@ -1,0 +1,96 @@
+name: Bootstrap Rivermetry Release 1
+
+on:
+  push:
+    branches: ["bootstrap/rivermetry-release1"]
+    paths: [".github/workflows/bootstrap-release1.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruct verified source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=/tmp/rivermetry-project.tar.gz.b64
+          : > "$out"
+          cat bootstrap/fix-chunk-00a.b64 bootstrap/fix-chunk-00b.b64 >> "$out"
+          cat bootstrap/chunk-01.b64 bootstrap/chunk-02.b64 bootstrap/chunk-03.b64 >> "$out"
+          cat bootstrap/fix-chunk-04a.b64 bootstrap/fix-chunk-04b.b64 >> "$out"
+          head -c 9000 bootstrap/chunk-05.b64 >> "$out"
+          cat bootstrap/chunk-06.b64 >> "$out"
+          cat bootstrap/fix-chunk-07a.b64 bootstrap/fix-chunk-07b.b64 >> "$out"
+          cat bootstrap/chunk-08.b64 >> "$out"
+          echo "d20efcae9b04c2ce2fe2611c3af4429756ad9ee13f902469bf05e99979b92671  $out" | sha256sum -c -
+          base64 --decode "$out" > /tmp/rivermetry-project.tar.gz
+          echo "0de60527998f30c4abd651ba72efcddbd2327abb813633f811efc4ec6a9114c9  /tmp/rivermetry-project.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/rivermetry-project.tar.gz -C .
+          rm -rf bootstrap
+          rm -f .github/workflows/bootstrap-release1.yml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install and test Python project
+        run: |
+          python -m pip install -e '.[dev]'
+          python -m pytest -v
+          python -m ruff check .
+
+      - name: Build and validate all 150 fixture pages
+        env:
+          BASE_URL: https://rivermetry.example
+          WORKER_BASE_URL: https://current.rivermetry.example
+        run: |
+          rivermetry build --fixtures --output dist
+          python -m rivermetry.build.guard dist
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test current-observation Worker
+        working-directory: worker/current-observation
+        run: npm test
+
+      - name: Verify production release stays locked
+        shell: bash
+        run: |
+          set +e
+          rivermetry release-gate
+          code=$?
+          set -e
+          if [ "$code" -ne 4 ]; then
+            echo "Expected development registry release gate to exit 4, got $code"
+            exit 1
+          fi
+
+      - name: Commit verified project snapshot
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: bootstrap Rivermetry release 1"
+          git push origin HEAD:bootstrap/rivermetry-release1
+
+      - name: Discover official USGS candidates
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: |
+          mkdir -p audit
+          rivermetry discover-usgs --limit 450 --output audit/discovered-usgs.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: usgs-candidate-discovery
+          path: audit/discovered-usgs.json
+          if-no-files-found: error
