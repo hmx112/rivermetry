@@ -18,106 +18,38 @@ class FakeClient:
 
     def get(self, url, *, params, headers, timeout):
         self.calls.append((url, params.copy()))
-        if "monitoring-locations" in url:
+        if "latest-continuous" in url:
+            code = params.get("parameter_code")
             return FakeResponse(
                 {
                     "features": [
                         {
-                            "id": "USGS-11264500",
                             "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
                             "properties": {
-                                "agency_code": "USGS",
-                                "monitoring_location_number": "11264500",
-                                "monitoring_location_name": "MERCED RIVER AT HAPPY ISLES BRIDGE NR YOSEMITE",
-                                "site_type_code": "ST",
-                                "state_name": "California",
-                                "state_code": "06",
-                                "time_zone_abbreviation": "PDT",
-                                "drainage_area": 181.0,
+                                "monitoring_location_id": "USGS-11264500",
+                                "parameter_code": code,
+                                "time": "2099-09-05T10:30:00+00:00",
                             },
                         }
-                    ]
+                    ],
+                    "links": [],
                 }
             )
-        code = params.get("parameter_code")
-        if code not in {"00060", "00065"}:
-            return FakeResponse({"features": []})
+        assert params.get("monitoring_location_id") == "USGS-11264500"
         return FakeResponse(
             {
                 "features": [
                     {
+                        "id": "USGS-11264500",
                         "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
                         "properties": {
-                            "monitoring_location_id": "USGS-11264500",
-                            "parameter_code": code,
-                            "time": "2026-09-05T10:30:00Z",
+                            "monitoring_location_number": "11264500",
+                            "monitoring_location_name": "MERCED RIVER AT HAPPY ISLES BRIDGE NR YOSEMITE",
+                            "state_name": "California",
+                            "state_code": "06",
+                            "time_zone_abbreviation": "PDT",
+                            "drainage_area": 181.0,
                         },
-                    }
-                ]
-            }
-        )
-
-
-def test_discovery_joins_latest_values_to_monitoring_location_metadata():
-    client = FakeClient()
-
-    candidates = discover_usgs_candidates(client, limit=10)
-
-    latest_calls = [params for url, params in client.calls if "latest-continuous" in url]
-    assert {call.get("parameter_code") for call in latest_calls} == {"00060", "00065"}
-    assert any("monitoring-locations" in url for url, _ in client.calls)
-    assert [item["station_id"] for item in candidates] == ["11264500"]
-    assert candidates[0]["state_name"] == "California"
-
-
-class PagingFakeClient:
-    def __init__(self):
-        self.calls = []
-
-    def get(self, url, *, params, headers, timeout):
-        self.calls.append((url, params.copy() if params else {}))
-        if "monitoring-locations" in url:
-            if "offset=1" in url:
-                return FakeResponse(
-                    {
-                        "features": [
-                            {
-                                "id": "USGS-11264500",
-                                "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
-                                "properties": {
-                                    "monitoring_location_number": "11264500",
-                                    "monitoring_location_name": "MERCED RIVER AT HAPPY ISLES BRIDGE NR YOSEMITE",
-                                    "state_name": "California",
-                                    "state_code": "06",
-                                    "time_zone_abbreviation": "PDT",
-                                    "drainage_area": 181.0,
-                                },
-                            }
-                        ],
-                        "links": [],
-                    }
-                )
-            return FakeResponse(
-                {
-                    "features": [],
-                    "links": [
-                        {
-                            "rel": "next",
-                            "href": "https://api.waterdata.usgs.gov/ogcapi/v0/collections/monitoring-locations/items?offset=1",
-                        }
-                    ],
-                }
-            )
-        code = params.get("parameter_code")
-        return FakeResponse(
-            {
-                "features": [
-                    {
-                        "properties": {
-                            "monitoring_location_id": "USGS-11264500",
-                            "parameter_code": code,
-                            "time": "2026-09-05T10:30:00Z",
-                        }
                     }
                 ],
                 "links": [],
@@ -125,7 +57,94 @@ class PagingFakeClient:
         )
 
 
-def test_discovery_follows_usgs_next_links_for_nationwide_metadata():
-    candidates = discover_usgs_candidates(PagingFakeClient(), limit=10)
+def test_discovery_joins_latest_values_to_targeted_monitoring_metadata():
+    client = FakeClient()
 
-    assert [item["state_name"] for item in candidates] == ["California"]
+    candidates = discover_usgs_candidates(client, limit=10)
+
+    latest_calls = [params for url, params in client.calls if "latest-continuous" in url]
+    assert {call.get("parameter_code") for call in latest_calls} == {"00060", "00065"}
+    metadata_calls = [params for url, params in client.calls if "monitoring-locations" in url]
+    assert metadata_calls == [
+        {"f": "json", "limit": "50000", "monitoring_location_id": "USGS-11264500"}
+    ]
+    assert [item["station_id"] for item in candidates] == ["11264500"]
+    assert candidates[0]["state_name"] == "California"
+
+
+class TwoStationClient:
+    def __init__(self):
+        self.calls = []
+
+    def get(self, url, *, params, headers, timeout):
+        self.calls.append((url, params.copy()))
+        if "latest-continuous" in url:
+            code = params["parameter_code"]
+            return FakeResponse(
+                {
+                    "features": [
+                        {
+                            "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
+                            "properties": {
+                                "monitoring_location_id": "USGS-11264500",
+                                "parameter_code": code,
+                                "time": "2099-09-05T10:30:00+00:00",
+                            },
+                        },
+                        {
+                            "geometry": {"type": "Point", "coordinates": [-80.0, 35.0]},
+                            "properties": {
+                                "monitoring_location_id": "USGS-99999999",
+                                "parameter_code": code,
+                                "time": "2099-09-05T10:30:00+00:00",
+                            },
+                        },
+                    ],
+                    "links": [],
+                }
+            )
+        ids = set(params["monitoring_location_id"].split(","))
+        assert ids == {"USGS-11264500", "USGS-99999999"}
+        return FakeResponse(
+            {
+                "features": [
+                    {
+                        "id": "USGS-11264500",
+                        "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
+                        "properties": {
+                            "monitoring_location_number": "11264500",
+                            "monitoring_location_name": "MERCED RIVER AT HAPPY ISLES BRIDGE NR YOSEMITE",
+                            "state_name": "California",
+                            "state_code": "06",
+                            "time_zone_abbreviation": "PDT",
+                            "drainage_area": 181.0,
+                        },
+                    },
+                    {
+                        "id": "USGS-99999999",
+                        "geometry": {"type": "Point", "coordinates": [-80.0, 35.0]},
+                        "properties": {
+                            "monitoring_location_number": "99999999",
+                            "monitoring_location_name": "TEST RIVER AT SAMPLE",
+                            "state_name": "North Carolina",
+                            "state_code": "37",
+                            "time_zone_abbreviation": "EDT",
+                            "drainage_area": 50.0,
+                        },
+                    },
+                ],
+                "links": [],
+            }
+        )
+
+
+def test_discovery_never_starts_with_an_unbounded_metadata_scan():
+    client = TwoStationClient()
+
+    candidates = discover_usgs_candidates(client, limit=10)
+
+    assert {item["station_id"] for item in candidates} == {"11264500", "99999999"}
+    metadata_calls = [params for url, params in client.calls if "monitoring-locations" in url]
+    assert len(metadata_calls) == 1
+    assert "monitoring_location_id" in metadata_calls[0]
+    assert "agency_code" not in metadata_calls[0]

@@ -77,29 +77,67 @@ def _fetch_features(
             None,
         )
         next_url = str(next_link["href"]) if next_link else None
-        next_params = {}
+        next_params = {"api_key": api_key} if api_key else {}
     return features
+
+
+def _targeted_metadata_ids(stations: dict[str, dict], limit: int) -> list[str]:
+    max_metadata = max(limit * 8, 800)
+    buckets: dict[tuple[int, int], deque[tuple[float, str]]] = defaultdict(deque)
+    eligible: dict[tuple[int, int], list[tuple[float, str]]] = defaultdict(list)
+    for monitoring_id, station in stations.items():
+        if station["parameters"] != {"00060", "00065"} or not station["ages"]:
+            continue
+        age_minutes = max(station["ages"])
+        if age_minutes > 90:
+            continue
+        coordinates = station.get("coordinates") or [None, None]
+        if len(coordinates) < 2 or coordinates[0] is None or coordinates[1] is None:
+            continue
+        longitude, latitude = coordinates[0], coordinates[1]
+        grid = (int((float(latitude) + 90) // 5), int((float(longitude) + 180) // 5))
+        eligible[grid].append((age_minutes, monitoring_id))
+    for grid, values in eligible.items():
+        buckets[grid] = deque(sorted(values, key=lambda item: (item[0], item[1])))
+    selected: list[str] = []
+    grid_keys = sorted(buckets)
+    while len(selected) < max_metadata and grid_keys:
+        next_keys = []
+        for key in grid_keys:
+            if buckets[key] and len(selected) < max_metadata:
+                selected.append(buckets[key].popleft()[1])
+            if buckets[key]:
+                next_keys.append(key)
+        grid_keys = next_keys
+    return selected
+
+
+def _fetch_targeted_metadata(
+    client: httpx.Client, monitoring_ids: list[str], api_key: str | None
+) -> dict[str, dict]:
+    metadata: dict[str, dict] = {}
+    for offset in range(0, len(monitoring_ids), 100):
+        batch = monitoring_ids[offset : offset + 100]
+        features = _fetch_features(
+            client,
+            MONITORING_URL,
+            {"monitoring_location_id": ",".join(batch)},
+            api_key,
+        )
+        for feature in features:
+            props = feature.get("properties") or {}
+            station_number = str(props.get("monitoring_location_number") or "")
+            station_id = str(feature.get("id") or "")
+            if not station_id and station_number:
+                station_id = f"USGS-{station_number}"
+            if station_id:
+                metadata[station_id] = feature
+    return metadata
 
 
 def discover_usgs_candidates(
     client: httpx.Client, limit: int = 450, api_key: str | None = None
 ) -> list[dict]:
-    monitoring_features = _fetch_features(
-        client,
-        MONITORING_URL,
-        {"agency_code": "USGS", "site_type_code": "ST"},
-        api_key,
-    )
-    metadata: dict[str, dict] = {}
-    for feature in monitoring_features:
-        props = feature.get("properties") or {}
-        station_number = str(props.get("monitoring_location_number") or "")
-        station_id = str(feature.get("id") or "")
-        if not station_id and station_number:
-            station_id = f"USGS-{station_number}"
-        if station_id:
-            metadata[station_id] = feature
-
     latest_features = []
     for parameter_code in ("00060", "00065"):
         latest_features.extend(
@@ -115,7 +153,9 @@ def discover_usgs_candidates(
             )
         )
 
-    stations: dict[str, dict] = defaultdict(lambda: {"parameters": set(), "ages": []})
+    stations: dict[str, dict] = defaultdict(
+        lambda: {"parameters": set(), "ages": [], "coordinates": None}
+    )
     now = datetime.now(UTC)
     for feature in latest_features:
         props = feature.get("properties") or {}
@@ -123,7 +163,7 @@ def discover_usgs_candidates(
         if parameter not in {"00060", "00065"}:
             continue
         monitoring_id = str(props.get("monitoring_location_id") or "")
-        if monitoring_id not in metadata:
+        if not monitoring_id:
             continue
         try:
             observed = datetime.fromisoformat(str(props.get("time") or ""))
@@ -133,27 +173,45 @@ def discover_usgs_candidates(
         item = stations[monitoring_id]
         item["parameters"].add(parameter)
         item["ages"].append(age_minutes)
+        coordinates = (feature.get("geometry") or {}).get("coordinates")
+        if coordinates and len(coordinates) >= 2:
+            item["coordinates"] = coordinates
+
+    metadata_ids = _targeted_metadata_ids(stations, limit)
+    metadata = _fetch_targeted_metadata(client, metadata_ids, api_key)
 
     qualified = []
-    for monitoring_id, station in stations.items():
-        if station["parameters"] != {"00060", "00065"}:
+    for monitoring_id in metadata_ids:
+        station = stations[monitoring_id]
+        feature = metadata.get(monitoring_id)
+        if not feature:
             continue
-        feature = metadata[monitoring_id]
         props = feature.get("properties") or {}
-        coordinates = (feature.get("geometry") or {}).get("coordinates", [None, None])
-        if len(coordinates) < 2 or coordinates[0] is None or coordinates[1] is None:
+        coordinates = (feature.get("geometry") or {}).get("coordinates") or station.get(
+            "coordinates"
+        )
+        if (
+            not coordinates
+            or len(coordinates) < 2
+            or coordinates[0] is None
+            or coordinates[1] is None
+        ):
             continue
-        station_id = str(props.get("monitoring_location_number") or monitoring_id.removeprefix("USGS-"))
+        station_id = str(
+            props.get("monitoring_location_number") or monitoring_id.removeprefix("USGS-")
+        )
         name = str(props.get("monitoring_location_name") or station_id)
         state_name = str(props.get("state_name") or "Unknown")
         state_code = str(props.get("state_code") or "")
         region = _region_slug(state_name, state_code)
         age_minutes = max(station["ages"])
-        data_quality = 35 if age_minutes <= 30 else 25 if age_minutes <= 90 else 10
+        data_quality = 35 if age_minutes <= 30 else 25
         drainage_area = props.get("drainage_area")
         history_score = 8 if drainage_area else 5
         demand_score = 8
-        if any(token in name.upper() for token in (" RIVER ", " CREEK ", " FORK ", " AT ", " NR ")):
+        if any(
+            token in name.upper() for token in (" RIVER ", " CREEK ", " FORK ", " AT ", " NR ")
+        ):
             demand_score += 4
         qualified.append(
             {
@@ -171,7 +229,7 @@ def discover_usgs_candidates(
                 "timezone": _timezone(props.get("time_zone_abbreviation")),
                 "state_name": state_name,
                 "drainage_area": drainage_area,
-                "hard_gate": age_minutes <= 90,
+                "hard_gate": True,
                 "data_quality_score": data_quality,
                 "demand_score": demand_score,
                 "history_score": history_score,
