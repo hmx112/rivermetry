@@ -1,0 +1,40 @@
+name: Select US Launch Preview
+on:
+  workflow_dispatch:
+  push:
+    branches: [bootstrap/rivermetry-release1]
+    paths:
+      - '.github/workflows/select-launch.yml'
+      - 'src/rivermetry/discovery.py'
+      - 'src/rivermetry/enrichment.py'
+      - 'src/rivermetry/selection.py'
+      - 'scripts/select_launch.py'
+      - 'tests/test_enrichment.py'
+      - 'tests/test_selection.py'
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -v
+      - run: python -m ruff check .
+      - name: Discover 450 real USGS candidates
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: rivermetry discover-usgs --output usgs-candidates.json --limit 450
+      - name: Enrich and select 150 preview locations
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: python scripts/select_launch.py --input usgs-candidates.json --output-dir launch-artifacts --limit 150
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rivermetry-launch-preview
+          path: |
+            usgs-candidates.json
+            launch-artifacts/usgs-candidates-enriched.json
+            launch-artifacts/launch-preview.json
+            launch-artifacts/launch-selection-report.json
