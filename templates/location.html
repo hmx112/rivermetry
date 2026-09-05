@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% set canonical_path = loc.public_path %}
+{% block title %}{{ loc.station_name }} — River Level & Streamflow | Rivermetry{% endblock %}
+{% block robots %}{% if preview %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+{% block content %}<p class="eyebrow">{{ loc.state_name or loc.region_code|title }}</p><h1>{{ loc.station_name }}</h1>
+<section class="metrics" data-current-location="{{ loc.location_id }}" data-worker-base="{{ settings.worker_base_url }}">
+<div class="metric"><span>Current River Level</span><strong data-level>Unavailable</strong></div>
+<div class="metric"><span>Streamflow</span><strong data-flow>Unavailable</strong></div>
+<div class="metric"><span>Latest Observation</span><strong data-time>Unavailable</strong></div>
+<div class="metric"><span>Trend</span><strong data-trend>Unknown</strong></div></section>
+{% if fixture %}<p class="notice">Fixture preview: no live data request is made.</p>{% endif %}
+<section><h2>About this station</h2><dl><dt>River</dt><dd>{{ loc.river_name }}</dd><dt>USGS station</dt><dd>{{ loc.station_id }}</dd><dt>Coordinates</dt><dd>{{ loc.latitude }}, {{ loc.longitude }}</dd></dl></section>
+<section><h2>Data sources</h2><p>Observation source: U.S. Geological Survey. Forecast content, when enabled, is sourced separately from NOAA National Weather Service.</p></section>{% endblock %}

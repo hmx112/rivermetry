@@ -1,0 +1,22 @@
+{
+  "usgs_water_data": {
+    "provider": "U.S. Geological Survey",
+    "dataset": "Water Data APIs",
+    "terms_url": "https://www.usgs.gov/data-management/data-licensing",
+    "checked_on": "2026-09-05",
+    "production_approved": true,
+    "commercial_display": true,
+    "attribution": "Source: U.S. Geological Survey",
+    "logo_allowed": false
+  },
+  "noaa_nwps": {
+    "provider": "NOAA / National Weather Service",
+    "dataset": "National Water Prediction Service API",
+    "terms_url": "https://www.weather.gov/disclaimer",
+    "checked_on": "2026-09-05",
+    "production_approved": true,
+    "commercial_display": true,
+    "attribution": "Forecast source: NOAA National Weather Service",
+    "logo_allowed": false
+  }
+}

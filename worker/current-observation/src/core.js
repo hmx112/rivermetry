@@ -1,0 +1,5 @@
+export const CACHE_SECONDS=900;
+export const STALE_SECONDS=5400;
+export function parseUSGSFeatures(features){const out={water_level:null,streamflow:null,observed_at:null};for(const f of features||[]){const p=f.properties||{};const value=Number(p.value);if(!Number.isFinite(value)||!p.time)continue;const obs={value,unit:p.unit_of_measure||'',observed_at:p.time,quality_status:p.approval_status||null};if(p.parameter_code==='00065')out.water_level=obs;if(p.parameter_code==='00060')out.streamflow=obs;if(!out.observed_at||Date.parse(p.time)>Date.parse(out.observed_at))out.observed_at=p.time;}return out;}
+export function freshness(observedAt,now=Date.now()){if(!observedAt)return'unavailable';const age=(now-Date.parse(observedAt))/1000;if(age<=1800)return'fresh';if(age<=STALE_SECONDS)return'delayed';return'unavailable';}
+export function json(data,status=200,origin=''){const headers={'content-type':'application/json; charset=utf-8','cache-control':`public, max-age=${CACHE_SECONDS}, s-maxage=${CACHE_SECONDS}`};if(origin)headers['access-control-allow-origin']=origin;return new Response(JSON.stringify(data),{status,headers});}
