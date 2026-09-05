@@ -35,7 +35,7 @@ class FakeClient:
                     "links": [],
                 }
             )
-        assert params.get("monitoring_location_id") == "USGS-11264500"
+        assert params.get("id") == "USGS-11264500"
         return FakeResponse(
             {
                 "features": [
@@ -65,9 +65,7 @@ def test_discovery_joins_latest_values_to_targeted_monitoring_metadata():
     latest_calls = [params for url, params in client.calls if "latest-continuous" in url]
     assert {call.get("parameter_code") for call in latest_calls} == {"00060", "00065"}
     metadata_calls = [params for url, params in client.calls if "monitoring-locations" in url]
-    assert metadata_calls == [
-        {"f": "json", "limit": "50000", "monitoring_location_id": "USGS-11264500"}
-    ]
+    assert metadata_calls == [{"f": "json", "limit": "50000", "id": "USGS-11264500"}]
     assert [item["station_id"] for item in candidates] == ["11264500"]
     assert candidates[0]["state_name"] == "California"
 
@@ -103,7 +101,7 @@ class TwoStationClient:
                     "links": [],
                 }
             )
-        ids = set(params["monitoring_location_id"].split(","))
+        ids = set(params["id"].split(","))
         assert ids == {"USGS-11264500", "USGS-99999999"}
         return FakeResponse(
             {
@@ -138,7 +136,7 @@ class TwoStationClient:
         )
 
 
-def test_discovery_never_starts_with_an_unbounded_metadata_scan():
+def test_discovery_uses_native_monitoring_location_id_filter():
     client = TwoStationClient()
 
     candidates = discover_usgs_candidates(client, limit=10)
@@ -146,5 +144,6 @@ def test_discovery_never_starts_with_an_unbounded_metadata_scan():
     assert {item["station_id"] for item in candidates} == {"11264500", "99999999"}
     metadata_calls = [params for url, params in client.calls if "monitoring-locations" in url]
     assert len(metadata_calls) == 1
-    assert "monitoring_location_id" in metadata_calls[0]
+    assert "id" in metadata_calls[0]
+    assert "monitoring_location_id" not in metadata_calls[0]
     assert "agency_code" not in metadata_calls[0]

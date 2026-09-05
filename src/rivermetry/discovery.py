@@ -121,7 +121,7 @@ def _fetch_targeted_metadata(
         features = _fetch_features(
             client,
             MONITORING_URL,
-            {"monitoring_location_id": ",".join(batch)},
+            {"id": ",".join(batch)},
             api_key,
         )
         for feature in features:
