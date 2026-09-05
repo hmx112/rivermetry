@@ -11,6 +11,7 @@ Rivermetry is a global-ready static river-conditions platform. Release 1 starts 
 - Cloudflare Pages + Worker free-tier operation is the initial target.
 - Every provider must be enabled and commercially approved in `data/sources.json` and documented in `docs/DATA-SOURCES.md` before production use.
 - Rivermetry does not create custom safety/flood-risk judgements.
+- USGS discovery first identifies gauges with fresh 00060 discharge and 00065 gage-height observations, then fetches metadata only for that bounded live-gauge pool.
 
 ## Commands
 
