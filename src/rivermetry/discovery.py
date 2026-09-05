@@ -118,12 +118,29 @@ def _fetch_targeted_metadata(
     metadata: dict[str, dict] = {}
     for offset in range(0, len(monitoring_ids), 100):
         batch = monitoring_ids[offset : offset + 100]
-        features = _fetch_features(
-            client,
-            MONITORING_URL,
-            {"id": ",".join(batch)},
-            api_key,
-        )
+        params = {"f": "json", "limit": "100"}
+        if api_key:
+            params["api_key"] = api_key
+        headers = {
+            "User-Agent": "Rivermetry/0.1 (+https://rivermetry.example)",
+            "Content-Type": "application/query-cql-json",
+        }
+        body = {"op": "in", "args": [{"property": "id"}, batch]}
+        try:
+            response = client.post(
+                MONITORING_URL,
+                params=params,
+                headers=headers,
+                json=body,
+                timeout=60,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise UpstreamDataError("USGS targeted metadata request failed") from exc
+        features = payload.get("features") if isinstance(payload, dict) else None
+        if not isinstance(features, list):
+            raise UpstreamSchemaError("USGS targeted metadata returned no features")
         for feature in features:
             props = feature.get("properties") or {}
             station_number = str(props.get("monitoring_location_number") or "")

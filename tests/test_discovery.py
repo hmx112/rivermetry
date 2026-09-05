@@ -14,28 +14,32 @@ class FakeResponse:
 
 class FakeClient:
     def __init__(self):
-        self.calls = []
+        self.get_calls = []
+        self.post_calls = []
 
     def get(self, url, *, params, headers, timeout):
-        self.calls.append((url, params.copy()))
-        if "latest-continuous" in url:
-            code = params.get("parameter_code")
-            return FakeResponse(
-                {
-                    "features": [
-                        {
-                            "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
-                            "properties": {
-                                "monitoring_location_id": "USGS-11264500",
-                                "parameter_code": code,
-                                "time": "2099-09-05T10:30:00+00:00",
-                            },
-                        }
-                    ],
-                    "links": [],
-                }
-            )
-        assert params.get("id") == "USGS-11264500"
+        self.get_calls.append((url, params.copy()))
+        code = params.get("parameter_code")
+        if code not in {"00060", "00065"}:
+            return FakeResponse({"features": [], "links": []})
+        return FakeResponse(
+            {
+                "features": [
+                    {
+                        "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
+                        "properties": {
+                            "monitoring_location_id": "USGS-11264500",
+                            "parameter_code": code,
+                            "time": "2099-09-05T10:30:00+00:00",
+                        },
+                    }
+                ],
+                "links": [],
+            }
+        )
+
+    def post(self, url, *, params, headers, json, timeout):
+        self.post_calls.append((url, params.copy(), headers.copy(), json))
         return FakeResponse(
             {
                 "features": [
@@ -51,8 +55,7 @@ class FakeClient:
                             "drainage_area": 181.0,
                         },
                     }
-                ],
-                "links": [],
+                ]
             }
         )
 
@@ -62,46 +65,48 @@ def test_discovery_joins_latest_values_to_targeted_monitoring_metadata():
 
     candidates = discover_usgs_candidates(client, limit=10)
 
-    latest_calls = [params for url, params in client.calls if "latest-continuous" in url]
+    latest_calls = [params for url, params in client.get_calls if "latest-continuous" in url]
     assert {call.get("parameter_code") for call in latest_calls} == {"00060", "00065"}
-    metadata_calls = [params for url, params in client.calls if "monitoring-locations" in url]
-    assert metadata_calls == [{"f": "json", "limit": "50000", "id": "USGS-11264500"}]
+    assert len(client.post_calls) == 1
+    _, params, headers, body = client.post_calls[0]
+    assert params == {"f": "json", "limit": "100"}
+    assert headers["Content-Type"] == "application/query-cql-json"
+    assert body == {"op": "in", "args": [{"property": "id"}, ["USGS-11264500"]]}
     assert [item["station_id"] for item in candidates] == ["11264500"]
     assert candidates[0]["state_name"] == "California"
 
 
-class TwoStationClient:
-    def __init__(self):
-        self.calls = []
-
+class TwoStationClient(FakeClient):
     def get(self, url, *, params, headers, timeout):
-        self.calls.append((url, params.copy()))
-        if "latest-continuous" in url:
-            code = params["parameter_code"]
-            return FakeResponse(
-                {
-                    "features": [
-                        {
-                            "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
-                            "properties": {
-                                "monitoring_location_id": "USGS-11264500",
-                                "parameter_code": code,
-                                "time": "2099-09-05T10:30:00+00:00",
-                            },
+        self.get_calls.append((url, params.copy()))
+        code = params.get("parameter_code")
+        return FakeResponse(
+            {
+                "features": [
+                    {
+                        "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
+                        "properties": {
+                            "monitoring_location_id": "USGS-11264500",
+                            "parameter_code": code,
+                            "time": "2099-09-05T10:30:00+00:00",
                         },
-                        {
-                            "geometry": {"type": "Point", "coordinates": [-80.0, 35.0]},
-                            "properties": {
-                                "monitoring_location_id": "USGS-99999999",
-                                "parameter_code": code,
-                                "time": "2099-09-05T10:30:00+00:00",
-                            },
+                    },
+                    {
+                        "geometry": {"type": "Point", "coordinates": [-80.0, 35.0]},
+                        "properties": {
+                            "monitoring_location_id": "USGS-99999999",
+                            "parameter_code": code,
+                            "time": "2099-09-05T10:30:00+00:00",
                         },
-                    ],
-                    "links": [],
-                }
-            )
-        ids = set(params["id"].split(","))
+                    },
+                ],
+                "links": [],
+            }
+        )
+
+    def post(self, url, *, params, headers, json, timeout):
+        self.post_calls.append((url, params.copy(), headers.copy(), json))
+        ids = set(json["args"][1])
         assert ids == {"USGS-11264500", "USGS-99999999"}
         return FakeResponse(
             {
@@ -130,20 +135,18 @@ class TwoStationClient:
                             "drainage_area": 50.0,
                         },
                     },
-                ],
-                "links": [],
+                ]
             }
         )
 
 
-def test_discovery_uses_native_monitoring_location_id_filter():
+def test_discovery_uses_cql_in_instead_of_unbounded_metadata_scan():
     client = TwoStationClient()
 
     candidates = discover_usgs_candidates(client, limit=10)
 
     assert {item["station_id"] for item in candidates} == {"11264500", "99999999"}
-    metadata_calls = [params for url, params in client.calls if "monitoring-locations" in url]
-    assert len(metadata_calls) == 1
-    assert "id" in metadata_calls[0]
-    assert "monitoring_location_id" not in metadata_calls[0]
-    assert "agency_code" not in metadata_calls[0]
+    assert len(client.post_calls) == 1
+    _, _, _, body = client.post_calls[0]
+    assert body["op"] == "in"
+    assert body["args"][0] == {"property": "id"}
