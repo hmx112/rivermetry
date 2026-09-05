@@ -48,20 +48,36 @@ def _fetch_features(
     request_params = {"f": "json", "limit": "50000", **params}
     if api_key:
         request_params["api_key"] = api_key
-    try:
-        response = client.get(
-            url,
-            params=request_params,
-            headers={"User-Agent": "Rivermetry/0.1 (+https://rivermetry.example)"},
-            timeout=60,
+    features: list[dict] = []
+    next_url: str | None = url
+    next_params: dict[str, str] = request_params
+    pages = 0
+    while next_url:
+        pages += 1
+        if pages > 20:
+            raise UpstreamSchemaError("USGS discovery pagination exceeded safety limit")
+        try:
+            response = client.get(
+                next_url,
+                params=next_params,
+                headers={"User-Agent": "Rivermetry/0.1 (+https://rivermetry.example)"},
+                timeout=60,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise UpstreamDataError("USGS discovery request failed") from exc
+        page_features = payload.get("features") if isinstance(payload, dict) else None
+        if not isinstance(page_features, list):
+            raise UpstreamSchemaError("USGS discovery returned no features")
+        features.extend(page_features)
+        links = payload.get("links") if isinstance(payload, dict) else None
+        next_link = next(
+            (link for link in links or [] if link.get("rel") == "next" and link.get("href")),
+            None,
         )
-        response.raise_for_status()
-        payload = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
-        raise UpstreamDataError("USGS discovery request failed") from exc
-    features = payload.get("features") if isinstance(payload, dict) else None
-    if not isinstance(features, list):
-        raise UpstreamSchemaError("USGS discovery returned no features")
+        next_url = str(next_link["href"]) if next_link else None
+        next_params = {}
     return features
 
 
@@ -127,9 +143,7 @@ def discover_usgs_candidates(
         coordinates = (feature.get("geometry") or {}).get("coordinates", [None, None])
         if len(coordinates) < 2 or coordinates[0] is None or coordinates[1] is None:
             continue
-        station_id = str(
-            props.get("monitoring_location_number") or monitoring_id.removeprefix("USGS-")
-        )
+        station_id = str(props.get("monitoring_location_number") or monitoring_id.removeprefix("USGS-"))
         name = str(props.get("monitoring_location_name") or station_id)
         state_name = str(props.get("state_name") or "Unknown")
         state_code = str(props.get("state_code") or "")
