@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from rivermetry.build.guard import guard_output
 from rivermetry.build.site import build_site
