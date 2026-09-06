@@ -1,0 +1,6 @@
+{
+  "name": "rivermetry-current-observation",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node --test"}
+}

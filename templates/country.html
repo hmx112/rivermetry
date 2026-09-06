@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% set canonical_path = "/us/" %}
+{% block title %}River Levels Across the United States — Rivermetry{% endblock %}
+{% block content %}<h1>River Levels Across the United States</h1><p>{{ live_count }} published locations.</p><div class="grid">{% for region, locations in states|dictsort %}<a class="card" href="/us/{{ region }}/"><strong>{{ locations[0].state_name or region|replace('-', ' ')|title }}</strong><span>{{ locations|length }} locations</span></a>{% endfor %}</div>{% endblock %}

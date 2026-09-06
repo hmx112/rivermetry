@@ -1,0 +1,752 @@
+{
+  "us-alabama-02425000": {
+    "country_code": "us",
+    "region_code": "alabama",
+    "station_id": "02425000"
+  },
+  "us-alaska-15356000": {
+    "country_code": "us",
+    "region_code": "alaska",
+    "station_id": "15356000"
+  },
+  "us-arizona-09379200": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09379200"
+  },
+  "us-arizona-09380000": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09380000"
+  },
+  "us-arizona-09400350": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09400350"
+  },
+  "us-arizona-09415000": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09415000"
+  },
+  "us-arizona-09444500": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09444500"
+  },
+  "us-arizona-09466500": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09466500"
+  },
+  "us-arizona-09506000": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09506000"
+  },
+  "us-arizona-09508500": {
+    "country_code": "us",
+    "region_code": "arizona",
+    "station_id": "09508500"
+  },
+  "us-arkansas-07337000": {
+    "country_code": "us",
+    "region_code": "arkansas",
+    "station_id": "07337000"
+  },
+  "us-california-11151700": {
+    "country_code": "us",
+    "region_code": "california",
+    "station_id": "11151700"
+  },
+  "us-california-11152300": {
+    "country_code": "us",
+    "region_code": "california",
+    "station_id": "11152300"
+  },
+  "us-california-11152500": {
+    "country_code": "us",
+    "region_code": "california",
+    "station_id": "11152500"
+  },
+  "us-california-11520500": {
+    "country_code": "us",
+    "region_code": "california",
+    "station_id": "11520500"
+  },
+  "us-california-11530000": {
+    "country_code": "us",
+    "region_code": "california",
+    "station_id": "11530000"
+  },
+  "us-colorado-06721000": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "06721000"
+  },
+  "us-colorado-07109500": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "07109500"
+  },
+  "us-colorado-07133000": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "07133000"
+  },
+  "us-colorado-09010500": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "09010500"
+  },
+  "us-colorado-09070500": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "09070500"
+  },
+  "us-colorado-09095500": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "09095500"
+  },
+  "us-colorado-09128000": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "09128000"
+  },
+  "us-colorado-09371010": {
+    "country_code": "us",
+    "region_code": "colorado",
+    "station_id": "09371010"
+  },
+  "us-connecticut-01200500": {
+    "country_code": "us",
+    "region_code": "connecticut",
+    "station_id": "01200500"
+  },
+  "us-delaware-01480000": {
+    "country_code": "us",
+    "region_code": "delaware",
+    "station_id": "01480000"
+  },
+  "us-district-of-columbia-01651800": {
+    "country_code": "us",
+    "region_code": "district-of-columbia",
+    "station_id": "01651800"
+  },
+  "us-florida-02319800": {
+    "country_code": "us",
+    "region_code": "florida",
+    "station_id": "02319800"
+  },
+  "us-florida-02320500": {
+    "country_code": "us",
+    "region_code": "florida",
+    "station_id": "02320500"
+  },
+  "us-florida-02375500": {
+    "country_code": "us",
+    "region_code": "florida",
+    "station_id": "02375500"
+  },
+  "us-georgia-02335450": {
+    "country_code": "us",
+    "region_code": "georgia",
+    "station_id": "02335450"
+  },
+  "us-georgia-02336490": {
+    "country_code": "us",
+    "region_code": "georgia",
+    "station_id": "02336490"
+  },
+  "us-georgia-02339500": {
+    "country_code": "us",
+    "region_code": "georgia",
+    "station_id": "02339500"
+  },
+  "us-georgia-02341460": {
+    "country_code": "us",
+    "region_code": "georgia",
+    "station_id": "02341460"
+  },
+  "us-hawaii-16704000": {
+    "country_code": "us",
+    "region_code": "hawaii",
+    "station_id": "16704000"
+  },
+  "us-idaho-13342500": {
+    "country_code": "us",
+    "region_code": "idaho",
+    "station_id": "13342500"
+  },
+  "us-illinois-03612600": {
+    "country_code": "us",
+    "region_code": "illinois",
+    "station_id": "03612600"
+  },
+  "us-illinois-05587450": {
+    "country_code": "us",
+    "region_code": "illinois",
+    "station_id": "05587450"
+  },
+  "us-illinois-07020500": {
+    "country_code": "us",
+    "region_code": "illinois",
+    "station_id": "07020500"
+  },
+  "us-illinois-07022000": {
+    "country_code": "us",
+    "region_code": "illinois",
+    "station_id": "07022000"
+  },
+  "us-indiana-03342000": {
+    "country_code": "us",
+    "region_code": "indiana",
+    "station_id": "03342000"
+  },
+  "us-iowa-06601200": {
+    "country_code": "us",
+    "region_code": "iowa",
+    "station_id": "06601200"
+  },
+  "us-kansas-06887500": {
+    "country_code": "us",
+    "region_code": "kansas",
+    "station_id": "06887500"
+  },
+  "us-kentucky-03308500": {
+    "country_code": "us",
+    "region_code": "kentucky",
+    "station_id": "03308500"
+  },
+  "us-kentucky-03309000": {
+    "country_code": "us",
+    "region_code": "kentucky",
+    "station_id": "03309000"
+  },
+  "us-kentucky-03320000": {
+    "country_code": "us",
+    "region_code": "kentucky",
+    "station_id": "03320000"
+  },
+  "us-louisiana-07367005": {
+    "country_code": "us",
+    "region_code": "louisiana",
+    "station_id": "07367005"
+  },
+  "us-maine-01010500": {
+    "country_code": "us",
+    "region_code": "maine",
+    "station_id": "01010500"
+  },
+  "us-maryland-01598500": {
+    "country_code": "us",
+    "region_code": "maryland",
+    "station_id": "01598500"
+  },
+  "us-maryland-01638500": {
+    "country_code": "us",
+    "region_code": "maryland",
+    "station_id": "01638500"
+  },
+  "us-maryland-01646500": {
+    "country_code": "us",
+    "region_code": "maryland",
+    "station_id": "01646500"
+  },
+  "us-massachusetts-01161280": {
+    "country_code": "us",
+    "region_code": "massachusetts",
+    "station_id": "01161280"
+  },
+  "us-michigan-04065722": {
+    "country_code": "us",
+    "region_code": "michigan",
+    "station_id": "04065722"
+  },
+  "us-minnesota-05288500": {
+    "country_code": "us",
+    "region_code": "minnesota",
+    "station_id": "05288500"
+  },
+  "us-minnesota-05331000": {
+    "country_code": "us",
+    "region_code": "minnesota",
+    "station_id": "05331000"
+  },
+  "us-minnesota-05338500": {
+    "country_code": "us",
+    "region_code": "minnesota",
+    "station_id": "05338500"
+  },
+  "us-minnesota-05355250": {
+    "country_code": "us",
+    "region_code": "minnesota",
+    "station_id": "05355250"
+  },
+  "us-mississippi-02473000": {
+    "country_code": "us",
+    "region_code": "mississippi",
+    "station_id": "02473000"
+  },
+  "us-missouri-06894650": {
+    "country_code": "us",
+    "region_code": "missouri",
+    "station_id": "06894650"
+  },
+  "us-missouri-06895500": {
+    "country_code": "us",
+    "region_code": "missouri",
+    "station_id": "06895500"
+  },
+  "us-missouri-06909000": {
+    "country_code": "us",
+    "region_code": "missouri",
+    "station_id": "06909000"
+  },
+  "us-missouri-06935965": {
+    "country_code": "us",
+    "region_code": "missouri",
+    "station_id": "06935965"
+  },
+  "us-missouri-07010000": {
+    "country_code": "us",
+    "region_code": "missouri",
+    "station_id": "07010000"
+  },
+  "us-montana-06036650": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06036650"
+  },
+  "us-montana-06054500": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06054500"
+  },
+  "us-montana-06115200": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06115200"
+  },
+  "us-montana-06164510": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06164510"
+  },
+  "us-montana-06174500": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06174500"
+  },
+  "us-montana-06177000": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06177000"
+  },
+  "us-montana-06185500": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06185500"
+  },
+  "us-montana-06191500": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06191500"
+  },
+  "us-montana-06207500": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06207500"
+  },
+  "us-montana-06214500": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06214500"
+  },
+  "us-montana-06309000": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06309000"
+  },
+  "us-montana-06329500": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "06329500"
+  },
+  "us-montana-12301933": {
+    "country_code": "us",
+    "region_code": "montana",
+    "station_id": "12301933"
+  },
+  "us-nebraska-06486000": {
+    "country_code": "us",
+    "region_code": "nebraska",
+    "station_id": "06486000"
+  },
+  "us-nebraska-06610000": {
+    "country_code": "us",
+    "region_code": "nebraska",
+    "station_id": "06610000"
+  },
+  "us-nebraska-06768000": {
+    "country_code": "us",
+    "region_code": "nebraska",
+    "station_id": "06768000"
+  },
+  "us-nebraska-06807000": {
+    "country_code": "us",
+    "region_code": "nebraska",
+    "station_id": "06807000"
+  },
+  "us-nevada-10333000": {
+    "country_code": "us",
+    "region_code": "nevada",
+    "station_id": "10333000"
+  },
+  "us-new-hampshire-01144500": {
+    "country_code": "us",
+    "region_code": "new-hampshire",
+    "station_id": "01144500"
+  },
+  "us-new-jersey-01457500": {
+    "country_code": "us",
+    "region_code": "new-jersey",
+    "station_id": "01457500"
+  },
+  "us-new-mexico-08279500": {
+    "country_code": "us",
+    "region_code": "new-mexico",
+    "station_id": "08279500"
+  },
+  "us-new-mexico-08313000": {
+    "country_code": "us",
+    "region_code": "new-mexico",
+    "station_id": "08313000"
+  },
+  "us-new-york-01357500": {
+    "country_code": "us",
+    "region_code": "new-york",
+    "station_id": "01357500"
+  },
+  "us-new-york-01500500": {
+    "country_code": "us",
+    "region_code": "new-york",
+    "station_id": "01500500"
+  },
+  "us-new-york-01503000": {
+    "country_code": "us",
+    "region_code": "new-york",
+    "station_id": "01503000"
+  },
+  "us-new-york-01513500": {
+    "country_code": "us",
+    "region_code": "new-york",
+    "station_id": "01513500"
+  },
+  "us-new-york-01513831": {
+    "country_code": "us",
+    "region_code": "new-york",
+    "station_id": "01513831"
+  },
+  "us-new-york-01531000": {
+    "country_code": "us",
+    "region_code": "new-york",
+    "station_id": "01531000"
+  },
+  "us-north-carolina-02080500": {
+    "country_code": "us",
+    "region_code": "north-carolina",
+    "station_id": "02080500"
+  },
+  "us-north-carolina-02084000": {
+    "country_code": "us",
+    "region_code": "north-carolina",
+    "station_id": "02084000"
+  },
+  "us-north-carolina-02105500": {
+    "country_code": "us",
+    "region_code": "north-carolina",
+    "station_id": "02105500"
+  },
+  "us-north-dakota-05124000": {
+    "country_code": "us",
+    "region_code": "north-dakota",
+    "station_id": "05124000"
+  },
+  "us-ohio-03255000": {
+    "country_code": "us",
+    "region_code": "ohio",
+    "station_id": "03255000"
+  },
+  "us-oklahoma-07165570": {
+    "country_code": "us",
+    "region_code": "oklahoma",
+    "station_id": "07165570"
+  },
+  "us-oklahoma-07194500": {
+    "country_code": "us",
+    "region_code": "oklahoma",
+    "station_id": "07194500"
+  },
+  "us-oklahoma-07305000": {
+    "country_code": "us",
+    "region_code": "oklahoma",
+    "station_id": "07305000"
+  },
+  "us-oklahoma-07315500": {
+    "country_code": "us",
+    "region_code": "oklahoma",
+    "station_id": "07315500"
+  },
+  "us-oregon-13333000": {
+    "country_code": "us",
+    "region_code": "oregon",
+    "station_id": "13333000"
+  },
+  "us-oregon-14166000": {
+    "country_code": "us",
+    "region_code": "oregon",
+    "station_id": "14166000"
+  },
+  "us-oregon-14174000": {
+    "country_code": "us",
+    "region_code": "oregon",
+    "station_id": "14174000"
+  },
+  "us-oregon-14191000": {
+    "country_code": "us",
+    "region_code": "oregon",
+    "station_id": "14191000"
+  },
+  "us-oregon-14372300": {
+    "country_code": "us",
+    "region_code": "oregon",
+    "station_id": "14372300"
+  },
+  "us-pennsylvania-01438500": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "01438500"
+  },
+  "us-pennsylvania-01515000": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "01515000"
+  },
+  "us-pennsylvania-01533400": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "01533400"
+  },
+  "us-pennsylvania-03015310": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "03015310"
+  },
+  "us-pennsylvania-03016000": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "03016000"
+  },
+  "us-pennsylvania-03025500": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "03025500"
+  },
+  "us-pennsylvania-03031500": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "03031500"
+  },
+  "us-pennsylvania-03036500": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "03036500"
+  },
+  "us-pennsylvania-03072655": {
+    "country_code": "us",
+    "region_code": "pennsylvania",
+    "station_id": "03072655"
+  },
+  "us-rhode-island-01112500": {
+    "country_code": "us",
+    "region_code": "rhode-island",
+    "station_id": "01112500"
+  },
+  "us-south-carolina-02131000": {
+    "country_code": "us",
+    "region_code": "south-carolina",
+    "station_id": "02131000"
+  },
+  "us-south-dakota-06478513": {
+    "country_code": "us",
+    "region_code": "south-dakota",
+    "station_id": "06478513"
+  },
+  "us-tennessee-03601990": {
+    "country_code": "us",
+    "region_code": "tennessee",
+    "station_id": "03601990"
+  },
+  "us-tennessee-03603000": {
+    "country_code": "us",
+    "region_code": "tennessee",
+    "station_id": "03603000"
+  },
+  "us-tennessee-07030050": {
+    "country_code": "us",
+    "region_code": "tennessee",
+    "station_id": "07030050"
+  },
+  "us-texas-08088000": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08088000"
+  },
+  "us-texas-08089000": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08089000"
+  },
+  "us-texas-08090800": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08090800"
+  },
+  "us-texas-08091000": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08091000"
+  },
+  "us-texas-08093100": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08093100"
+  },
+  "us-texas-08158000": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08158000"
+  },
+  "us-texas-08159500": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08159500"
+  },
+  "us-texas-08211000": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08211000"
+  },
+  "us-texas-08211200": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08211200"
+  },
+  "us-texas-08446500": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08446500"
+  },
+  "us-texas-08447000": {
+    "country_code": "us",
+    "region_code": "texas",
+    "station_id": "08447000"
+  },
+  "us-utah-09180000": {
+    "country_code": "us",
+    "region_code": "utah",
+    "station_id": "09180000"
+  },
+  "us-utah-09180500": {
+    "country_code": "us",
+    "region_code": "utah",
+    "station_id": "09180500"
+  },
+  "us-utah-09261000": {
+    "country_code": "us",
+    "region_code": "utah",
+    "station_id": "09261000"
+  },
+  "us-utah-09292500": {
+    "country_code": "us",
+    "region_code": "utah",
+    "station_id": "09292500"
+  },
+  "us-utah-09302000": {
+    "country_code": "us",
+    "region_code": "utah",
+    "station_id": "09302000"
+  },
+  "us-utah-09315000": {
+    "country_code": "us",
+    "region_code": "utah",
+    "station_id": "09315000"
+  },
+  "us-utah-09379500": {
+    "country_code": "us",
+    "region_code": "utah",
+    "station_id": "09379500"
+  },
+  "us-vermont-01138500": {
+    "country_code": "us",
+    "region_code": "vermont",
+    "station_id": "01138500"
+  },
+  "us-virginia-02060500": {
+    "country_code": "us",
+    "region_code": "virginia",
+    "station_id": "02060500"
+  },
+  "us-washington-12194000": {
+    "country_code": "us",
+    "region_code": "washington",
+    "station_id": "12194000"
+  },
+  "us-washington-12200500": {
+    "country_code": "us",
+    "region_code": "washington",
+    "station_id": "12200500"
+  },
+  "us-washington-12439500": {
+    "country_code": "us",
+    "region_code": "washington",
+    "station_id": "12439500"
+  },
+  "us-west-virginia-01605500": {
+    "country_code": "us",
+    "region_code": "west-virginia",
+    "station_id": "01605500"
+  },
+  "us-west-virginia-01606500": {
+    "country_code": "us",
+    "region_code": "west-virginia",
+    "station_id": "01606500"
+  },
+  "us-wisconsin-05407000": {
+    "country_code": "us",
+    "region_code": "wisconsin",
+    "station_id": "05407000"
+  },
+  "us-wyoming-06670500": {
+    "country_code": "us",
+    "region_code": "wyoming",
+    "station_id": "06670500"
+  },
+  "us-wyoming-09209400": {
+    "country_code": "us",
+    "region_code": "wyoming",
+    "station_id": "09209400"
+  },
+  "us-wyoming-09211200": {
+    "country_code": "us",
+    "region_code": "wyoming",
+    "station_id": "09211200"
+  },
+  "us-wyoming-09257000": {
+    "country_code": "us",
+    "region_code": "wyoming",
+    "station_id": "09257000"
+  }
+}

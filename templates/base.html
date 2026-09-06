@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}{{ settings.site_name }} — Live River Levels & Streamflow{% endblock %}</title>
+{% block robots %}{% endblock %}<link rel="canonical" href="{{ settings.base_url }}{{ canonical_path }}">
+<link rel="stylesheet" href="/static/site.css"></head>
+<body><header><a class="brand" href="/">Rivermetry</a><span>Live River Levels &amp; Streamflow</span></header>
+<main>{% block content %}{% endblock %}</main>
+<footer>Official-source river information. Rivermetry is not affiliated with or endorsed by USGS, NOAA, or NWS.</footer>
+<script src="/static/current.js" defer></script></body></html>

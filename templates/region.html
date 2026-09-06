@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% set canonical_path = "/us/" + region + "/" %}
+{% block title %}{{ locations[0].state_name or region|title }} River Levels & Streamflow — Rivermetry{% endblock %}
+{% block content %}<h1>{{ locations[0].state_name or region|replace('-', ' ')|title }} River Levels &amp; Streamflow</h1><div class="list">{% for loc in locations %}<a class="card" href="{{ loc.public_path }}"><strong>{{ loc.river_name }}</strong><span>{{ loc.station_name }}</span></a>{% endfor %}</div>{% endblock %}

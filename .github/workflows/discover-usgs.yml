@@ -1,0 +1,29 @@
+name: Discover USGS Candidates
+on:
+  workflow_dispatch:
+  push:
+    branches: [bootstrap/rivermetry-release1]
+    paths:
+      - '.github/workflows/discover-usgs.yml'
+      - 'src/rivermetry/discovery.py'
+      - 'src/rivermetry/cli.py'
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -v
+      - name: Discover real USGS candidate pool
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: rivermetry discover-usgs --output usgs-candidates.json --limit 450
+      - run: rivermetry audit-registry --input usgs-candidates.json --output usgs-candidate-audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: usgs-candidates
+          path: |
+            usgs-candidates.json
+            usgs-candidate-audit.json

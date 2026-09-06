@@ -1,0 +1,85 @@
+{% extends "base.html" %}{% set canonical_path = loc.public_path %}
+{% block title %}{{ loc.station_name }} — River Level & Streamflow | Rivermetry{% endblock %}
+{% block robots %}{% if preview %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+{% block content %}
+<p class="eyebrow">{{ loc.state_name or loc.region_code|title }}</p>
+<h1>{{ loc.station_name }}</h1>
+<p class="lede">Observed river level and streamflow from the U.S. Geological Survey, with official National Weather Service forecast data where available.</p>
+
+<section class="metrics" data-current-location="{{ loc.location_id }}" data-worker-base="{{ settings.worker_base_url }}" data-static-observed="{{ view.static_observed }}">
+  <div class="metric"><span>Current River Level</span><strong data-level>{{ view.level_text }}</strong></div>
+  <div class="metric"><span>Streamflow</span><strong data-flow>{{ view.flow_text }}</strong></div>
+  <div class="metric"><span>Latest Observation</span><strong class="metric-time" data-time>{{ view.observed_text }}</strong></div>
+  <div class="metric"><span>Trend</span><strong data-trend>{{ view.trend_text }}</strong></div>
+</section>
+{% if view.notice %}<p class="notice" data-update-notice>{{ view.notice }}</p>{% else %}<p class="notice notice-hidden" data-update-notice></p>{% endif %}
+{% if fixture and not snapshot %}<p class="notice">Fixture preview: no live data request is made.</p>{% endif %}
+
+{% if view.level_chart %}
+<section class="panel chart-panel">
+  <h2>24-hour river level</h2>
+  <svg class="spark-chart" viewBox="0 0 720 180" role="img" aria-label="24-hour river level chart">
+    <polyline points="{{ view.level_chart.points }}" fill="none" vector-effect="non-scaling-stroke"></polyline>
+  </svg>
+  <p class="chart-summary">Minimum {{ '%g'|format(view.level_chart.min) }} ft · Maximum {{ '%g'|format(view.level_chart.max) }} ft · Latest {{ '%g'|format(view.level_chart.current) }} ft</p>
+</section>
+{% endif %}
+
+{% if view.flow_chart %}
+<section class="panel chart-panel">
+  <h2>24-hour streamflow</h2>
+  <svg class="spark-chart" viewBox="0 0 720 180" role="img" aria-label="24-hour streamflow chart">
+    <polyline points="{{ view.flow_chart.points }}" fill="none" vector-effect="non-scaling-stroke"></polyline>
+  </svg>
+</section>
+{% endif %}
+
+{% if view.changes %}
+<section class="panel">
+  <h2>Recent river-level change</h2>
+  <div class="change-grid">
+    <div><span>1 hour</span><strong>{{ view.changes['1h'] }}</strong></div>
+    <div><span>6 hours</span><strong>{{ view.changes['6h'] }}</strong></div>
+    <div><span>24 hours</span><strong>{{ view.changes['24h'] }}</strong></div>
+  </div>
+</section>
+{% endif %}
+
+{% if view.seven_day_average is not none or view.thirty_day_average is not none %}
+<section class="panel">
+  <h2>Historical context</h2>
+  <dl class="context-list">
+    {% if view.seven_day_average is not none %}<dt>7-day average streamflow</dt><dd>{{ '%g'|format(view.seven_day_average) }} {{ view.streamflow_unit }}</dd>{% endif %}
+    {% if view.thirty_day_average is not none %}<dt>30-day average streamflow</dt><dd>{{ '%g'|format(view.thirty_day_average) }} {{ view.streamflow_unit }}</dd>{% endif %}
+  </dl>
+</section>
+{% endif %}
+
+<section class="panel forecast-panel">
+  <h2>Official NWS Forecast</h2>
+  {% if view.forecast %}
+    <p class="source-note">Forecast issued {{ view.forecast.issued_at }} by the National Weather Service.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Valid time</th><th>Stage</th><th>Flow</th></tr></thead>
+      <tbody>
+      {% for row in view.forecast.rows %}
+        <tr>
+          <td>{{ row.valid_time }}</td>
+          <td>{% if row.primary is not none %}{{ '%g'|format(row.primary) }} {{ row.primary_unit }}{% else %}—{% endif %}</td>
+          <td>{% if row.secondary is not none %}{{ '%g'|format(row.secondary) }} {{ row.secondary_unit }}{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% set minor = view.forecast.categories.get('minor', {}) %}
+    {% if minor.get('stage') is not none %}<p><strong>Minor flood stage:</strong> {{ '%.1f'|format(minor.get('stage')) }} {{ view.forecast.categories.get('stage_unit', '') }}</p>{% endif %}
+  {% elif loc.forecast_location_id %}
+    <p>Official river forecast data is temporarily unavailable for this location.</p>
+  {% else %}
+    <p>Official river forecast is not configured for this location.</p>
+  {% endif %}
+</section>
+
+<section class="panel"><h2>About this station</h2><dl class="context-list"><dt>River</dt><dd>{{ loc.river_name }}</dd><dt>USGS station</dt><dd>{{ loc.station_id }}</dd><dt>Coordinates</dt><dd>{{ loc.latitude }}, {{ loc.longitude }}</dd>{% if loc.drainage_area %}<dt>Drainage area</dt><dd>{{ loc.drainage_area }} mi²</dd>{% endif %}</dl></section>
+<section class="panel"><h2>Data sources</h2><p>Observation source: U.S. Geological Survey. Forecast content, when enabled, is sourced separately from NOAA National Weather Service.</p></section>
+{% endblock %}
