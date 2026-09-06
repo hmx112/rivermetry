@@ -1,9 +1,10 @@
-from rivermetry.enrichment import enrich_candidates, match_nwps
+from rivermetry.enrichment import enrich_candidates, fetch_nwps_gauges, match_nwps
 
 
 class Response:
-    def __init__(self, payload):
+    def __init__(self, payload=None, text=""):
         self.payload = payload
+        self.text = text
 
     def raise_for_status(self):
         return None
@@ -34,18 +35,12 @@ class Client:
 
     def get(self, url, *, headers, timeout):
         return Response(
-            {
-                "gauges": [
-                    {
-                        "lid": "TEST1",
-                        "name": "Test River",
-                        "state": {"name": "California"},
-                        "latitude": 37.7001,
-                        "longitude": -119.5001,
-                        "pedts": {"forecast": "HGIFF"},
-                    }
-                ]
-            }
+            text=(
+                '"location name","nws shef id","usgs id","latitude","longitude","state",'
+                '"forecast status","in service"\n'
+                '"Test River","TEST1","11264500",37.7001,-119.5001,"CA",'
+                '"Forecasts are issued routinely year-round.",true\n'
+            )
         )
 
 
@@ -70,6 +65,14 @@ def test_enrichment_adds_history_and_nwps_forecast():
 
 def test_enrichment_excludes_non_us_launch_regions():
     assert enrich_candidates(Client(), [candidate("British Columbia")]) == []
+
+
+def test_static_nwps_report_maps_exact_usgs_id_and_forecast_configuration():
+    gauges = fetch_nwps_gauges(Client())
+
+    assert gauges[0]["usgs_id"] == "11264500"
+    assert gauges[0]["lid"] == "TEST1"
+    assert gauges[0]["nwps_forecast"] is True
 
 
 def test_nwps_match_rejects_distant_gauge():
