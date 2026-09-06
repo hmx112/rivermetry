@@ -1,0 +1,31 @@
+name: Inspect NWPS Stageflow Schema
+on:
+  push:
+    branches: [bootstrap/rivermetry-release1]
+    paths: ['.github/workflows/inspect-stageflow.yml']
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Fetch bounded NWPS sample
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          def fetch(url):
+              req=urllib.request.Request(url,headers={'User-Agent':'Rivermetry/0.1'})
+              with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
+          meta=fetch('https://api.water.noaa.gov/nwps/v1/gauges/CLFA3')
+          sf=fetch('https://api.water.noaa.gov/nwps/v1/gauges/CLFA3/stageflow')
+          def shape(obj,depth=0):
+              if depth>2:return type(obj).__name__
+              if isinstance(obj,dict):return {k:shape(v,depth+1) for k,v in list(obj.items())[:30]}
+              if isinstance(obj,list):return [shape(v,depth+1) for v in obj[:2]]
+              return obj
+          open('nwps-stageflow-schema.json','w').write(json.dumps({'metadata':shape(meta),'stageflow':shape(sf)},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nwps-stageflow-schema
+          path: nwps-stageflow-schema.json
