@@ -9,7 +9,7 @@ import httpx
 from rivermetry.adapters.base import UpstreamDataError, UpstreamSchemaError
 from rivermetry.models import Observation, ObservationSeriesPoint
 
-BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections"
+BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections"
 PARAMETERS = {"00065": "water_level", "00060": "streamflow"}
 
 
@@ -78,6 +78,22 @@ def normalize_series_records(payload: dict[str, Any]) -> dict[str, tuple[Observa
     }
 
 
+def normalize_daily_records(payload: dict[str, Any]) -> list[float]:
+    values: dict[datetime, float] = {}
+    for feature in _features(payload):
+        props = feature.get("properties") or {}
+        if props.get("parameter_code") != "00060" or props.get("statistic_id") != "00003":
+            continue
+        try:
+            value = float(props["value"])
+            observed_at = _dt(props["time"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if math.isfinite(value):
+            values[observed_at] = value
+    return [values[key] for key in sorted(values)]
+
+
 class USGSAdapter:
     def __init__(self, client: httpx.Client, api_key: str | None = None):
         self.client = client
@@ -110,10 +126,7 @@ class USGSAdapter:
         for station in station_ids:
             payload = self._get(
                 "latest-continuous",
-                {
-                    "monitoring_location_id": f"USGS-{station}",
-                    "limit": "20",
-                },
+                {"monitoring_location_id": f"USGS-{station}", "limit": "20"},
             )
             result.update(normalize_latest_records(payload))
         return result
@@ -128,3 +141,16 @@ class USGSAdapter:
             },
         )
         return normalize_series_records(payload)
+
+    def fetch_daily(self, station_id: str, start_iso: str, end_iso: str) -> list[float]:
+        payload = self._get(
+            "daily",
+            {
+                "monitoring_location_id": f"USGS-{station_id}",
+                "parameter_code": "00060",
+                "statistic_id": "00003",
+                "datetime": f"{start_iso}/{end_iso}",
+                "limit": "1000",
+            },
+        )
+        return normalize_daily_records(payload)
