@@ -9,7 +9,7 @@ import httpx
 from rivermetry.adapters.base import UpstreamDataError, UpstreamSchemaError
 from rivermetry.selection import demand_score as launch_demand_score
 
-COLLECTIONS_BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections"
+COLLECTIONS_BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections"
 LATEST_URL = f"{COLLECTIONS_BASE}/latest-continuous/items"
 MONITORING_URL = f"{COLLECTIONS_BASE}/monitoring-locations/items"
 
