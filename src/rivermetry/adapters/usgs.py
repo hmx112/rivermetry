@@ -79,19 +79,19 @@ def normalize_series_records(payload: dict[str, Any]) -> dict[str, tuple[Observa
 
 
 def normalize_daily_records(payload: dict[str, Any]) -> list[float]:
-    values: dict[datetime, float] = {}
+    values: dict[str, float] = {}
     for feature in _features(payload):
         props = feature.get("properties") or {}
         if props.get("parameter_code") != "00060" or props.get("statistic_id") != "00003":
             continue
         try:
             value = float(props["value"])
-            observed_at = _dt(props["time"])
+            observed_day = str(props["time"])
         except (KeyError, TypeError, ValueError):
             continue
-        if math.isfinite(value):
-            values[observed_at] = value
-    return [values[key] for key in sorted(values)]
+        if observed_day and math.isfinite(value):
+            values[observed_day] = value
+    return [values[key] for key in sorted(values, reverse=True)]
 
 
 class USGSAdapter:
