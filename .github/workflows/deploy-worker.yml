@@ -1,0 +1,35 @@
+name: Deploy Current Observation Worker
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/current-observation/**'
+      - '.github/workflows/deploy-worker.yml'
+jobs:
+  deploy:
+    if: ${{ vars.BASE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PUBLIC_ORIGIN: ${{ vars.BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Worker deployment configuration
+        run: |
+          test -n "$CF_API_TOKEN" || { echo 'CLOUDFLARE_API_TOKEN is missing'; exit 2; }
+          test -n "$CF_ACCOUNT_ID" || { echo 'CLOUDFLARE_ACCOUNT_ID is missing'; exit 2; }
+          test -n "$PUBLIC_ORIGIN" || { echo 'BASE_URL is missing'; exit 2; }
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm test
+        working-directory: worker/current-observation
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker/current-observation
+          command: deploy --var PUBLIC_ORIGIN:${{ vars.BASE_URL }}
