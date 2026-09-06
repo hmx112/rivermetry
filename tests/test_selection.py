@@ -44,6 +44,23 @@ def test_one_per_state_is_chosen_before_extra_locations():
     assert {x["state_name"] for x in out} == {"California", "Rhode Island"}
 
 
+def test_priority_states_get_three_locations_before_global_fill():
+    items = [
+        item("ca1", "California", "Sacramento River at A", 9000, 30, True),
+        item("ca2", "California", "American River at B", 2000, 30, True),
+        item("ca3", "California", "Merced River at C", 500, 30, True),
+        item("ca4", "California", "Small Creek at D", 50, 30, False),
+        item("ia1", "Iowa", "Mississippi River at E", 100000, 50, True),
+        item("ia2", "Iowa", "Missouri River at F", 100000, 50, True),
+        item("ia3", "Iowa", "Large River at G", 50000, 50, True),
+        item("ri1", "Rhode Island", "Pawcatuck River at H", 500, 20, False),
+    ]
+    out = select_launch_locations(items, 6)
+    states = [x["state_name"] for x in out]
+    assert states.count("California") == 3
+    assert "Rhode Island" in states
+
+
 def test_same_nwps_lid_is_not_selected_twice_when_an_alternative_exists():
     first = item("nv1", "Nevada", "Colorado River at A", 15000, 40, True)
     duplicate = item("nv2", "Nevada", "Colorado River at B", 12000, 40, True)
