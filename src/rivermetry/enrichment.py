@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import io
 from datetime import UTC, datetime
+from urllib.request import Request, urlopen
 
 import httpx
 
@@ -86,14 +87,8 @@ def _float_or_none(value: str | None) -> float | None:
         return None
 
 
-def fetch_nwps_gauges(client: httpx.Client) -> list[dict]:
-    response = client.get(
-        NWPS_GAUGES_REPORT_URL,
-        headers={"User-Agent": "Rivermetry/0.1 (+https://rivermetry.example)"},
-        timeout=60,
-    )
-    response.raise_for_status()
-    reader = csv.DictReader(io.StringIO(response.text.lstrip("\ufeff")))
+def parse_nwps_gauges_report(text: str) -> list[dict]:
+    reader = csv.DictReader(io.StringIO(text.lstrip("\ufeff")))
     gauges = []
     for row in reader:
         lid = str(row.get("nws shef id") or "").strip()
@@ -118,6 +113,16 @@ def fetch_nwps_gauges(client: httpx.Client) -> list[dict]:
     return gauges
 
 
+def fetch_nwps_gauges() -> list[dict]:
+    request = Request(
+        NWPS_GAUGES_REPORT_URL,
+        headers={"User-Agent": "Rivermetry/0.1 (+https://rivermetry.example)"},
+    )
+    with urlopen(request, timeout=60) as response:
+        text = response.read().decode("utf-8-sig", errors="replace")
+    return parse_nwps_gauges_report(text)
+
+
 def _distance_sq(candidate: dict, gauge: dict) -> float:
     return (float(candidate["latitude"]) - float(gauge["latitude"])) ** 2 + (
         float(candidate["longitude"]) - float(gauge["longitude"])
@@ -127,39 +132,25 @@ def _distance_sq(candidate: dict, gauge: dict) -> float:
 def match_nwps(candidate: dict, gauges: list[dict], max_degrees: float = 0.03) -> dict | None:
     station_id = str(candidate.get("station_id") or "")
     exact = [gauge for gauge in gauges if station_id and str(gauge.get("usgs_id") or "") == station_id]
-    if exact:
-        exact.sort(
-            key=lambda gauge: (
-                not bool(gauge.get("nwps_forecast")),
-                _distance_sq(candidate, gauge)
-                if gauge.get("latitude") is not None and gauge.get("longitude") is not None
-                else float("inf"),
-                str(gauge.get("lid") or ""),
-            )
-        )
-        return exact[0]
-
-    state = candidate.get("state_name")
-    matches = []
-    for gauge in gauges:
-        if gauge.get("usgs_id"):
-            continue
-        gauge_state = (gauge.get("state") or {}).get("name")
-        if state and gauge_state and state != gauge_state:
-            continue
-        if gauge.get("latitude") is None or gauge.get("longitude") is None:
-            continue
-        distance = _distance_sq(candidate, gauge)
-        if distance <= max_degrees**2:
-            matches.append((distance, gauge))
-    if not matches:
+    if not exact:
         return None
-    matches.sort(key=lambda pair: pair[0])
-    return matches[0][1]
+    exact.sort(
+        key=lambda gauge: (
+            not bool(gauge.get("nwps_forecast")),
+            _distance_sq(candidate, gauge)
+            if gauge.get("latitude") is not None and gauge.get("longitude") is not None
+            else float("inf"),
+            str(gauge.get("lid") or ""),
+        )
+    )
+    return exact[0]
 
 
 def enrich_candidates(
-    client: httpx.Client, candidates: list[dict], api_key: str | None = None
+    client: httpx.Client,
+    candidates: list[dict],
+    api_key: str | None = None,
+    nwps_gauges: list[dict] | None = None,
 ) -> list[dict]:
     launch_candidates = [
         item for item in candidates if item.get("state_name") in US_LAUNCH_REGIONS
@@ -167,7 +158,7 @@ def enrich_candidates(
     history = fetch_history_years(
         client, [str(item["station_id"]) for item in launch_candidates], api_key
     )
-    gauges = fetch_nwps_gauges(client)
+    gauges = nwps_gauges if nwps_gauges is not None else fetch_nwps_gauges()
     enriched = []
     for item in launch_candidates:
         row = dict(item)
