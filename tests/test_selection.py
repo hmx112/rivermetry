@@ -44,6 +44,20 @@ def test_one_per_state_is_chosen_before_extra_locations():
     assert {x["state_name"] for x in out} == {"California", "Rhode Island"}
 
 
+def test_same_nwps_lid_is_not_selected_twice_when_an_alternative_exists():
+    first = item("nv1", "Nevada", "Colorado River at A", 15000, 40, True)
+    duplicate = item("nv2", "Nevada", "Colorado River at B", 12000, 40, True)
+    alternative = item("nv3", "Nevada", "Truckee River at C", 8000, 40, True)
+    first["nwps_lid"] = "SAME"
+    duplicate["nwps_lid"] = "SAME"
+    alternative["nwps_lid"] = "OTHER"
+
+    out = select_launch_locations([first, duplicate, alternative], 2)
+
+    assert [x["location_id"] for x in out] == ["nv1", "nv3"]
+    assert len({x["nwps_lid"] for x in out}) == 2
+
+
 def test_history_and_demand_scores_are_bounded():
     assert history_score(40) == 10
     assert history_score(0.2) == 0
