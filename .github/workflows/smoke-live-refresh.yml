@@ -39,4 +39,4 @@ jobs:
           assert with_charts >= 145
           assert with_forecast >= 100
           PY
-      # Temporary launch validation workflow; remove after the full live refresh passes.
+      # Final temporary launch smoke: USGS observations are fetched in bounded CQL2 batches.
