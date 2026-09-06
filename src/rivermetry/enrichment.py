@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+import io
 from datetime import UTC, datetime
 
 import httpx
@@ -7,7 +9,9 @@ import httpx
 from rivermetry.selection import US_LAUNCH_REGIONS
 
 USGS_HISTORY_URL = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/time-series-metadata/items"
-NWPS_GAUGES_URL = "https://api.water.noaa.gov/nwps/v1/gauges"
+NWPS_GAUGES_REPORT_URL = (
+    "https://water.noaa.gov/resources/downloads/reports/nwps_all_gauges_report.csv"
+)
 
 
 def _years_since(value: str | None, now: datetime) -> float:
@@ -75,17 +79,42 @@ def fetch_history_years(
     return output
 
 
+def _float_or_none(value: str | None) -> float | None:
+    try:
+        return float(value) if value not in (None, "") else None
+    except ValueError:
+        return None
+
+
 def fetch_nwps_gauges(client: httpx.Client) -> list[dict]:
     response = client.get(
-        NWPS_GAUGES_URL,
+        NWPS_GAUGES_REPORT_URL,
         headers={"User-Agent": "Rivermetry/0.1 (+https://rivermetry.example)"},
-        timeout=120,
+        timeout=60,
     )
     response.raise_for_status()
-    payload = response.json()
-    gauges = payload.get("gauges") if isinstance(payload, dict) else None
-    if not isinstance(gauges, list):
-        raise ValueError("NWPS gauge list returned unexpected JSON")
+    reader = csv.DictReader(io.StringIO(response.text.lstrip("\ufeff")))
+    gauges = []
+    for row in reader:
+        lid = str(row.get("nws shef id") or "").strip()
+        if not lid:
+            continue
+        in_service = str(row.get("in service") or "").strip().lower()
+        if in_service not in {"true", "1", "yes"}:
+            continue
+        forecast_status = str(row.get("forecast status") or "").strip()
+        gauges.append(
+            {
+                "lid": lid,
+                "name": str(row.get("location name") or "").strip(),
+                "usgs_id": str(row.get("usgs id") or "").strip(),
+                "state": {"abbreviation": str(row.get("state") or "").strip()},
+                "latitude": _float_or_none(row.get("latitude")),
+                "longitude": _float_or_none(row.get("longitude")),
+                "nwps_forecast": forecast_status.lower().startswith("forecasts are issued"),
+                "forecast_status": forecast_status,
+            }
+        )
     return gauges
 
 
@@ -96,9 +125,25 @@ def _distance_sq(candidate: dict, gauge: dict) -> float:
 
 
 def match_nwps(candidate: dict, gauges: list[dict], max_degrees: float = 0.03) -> dict | None:
+    station_id = str(candidate.get("station_id") or "")
+    exact = [gauge for gauge in gauges if station_id and str(gauge.get("usgs_id") or "") == station_id]
+    if exact:
+        exact.sort(
+            key=lambda gauge: (
+                not bool(gauge.get("nwps_forecast")),
+                _distance_sq(candidate, gauge)
+                if gauge.get("latitude") is not None and gauge.get("longitude") is not None
+                else float("inf"),
+                str(gauge.get("lid") or ""),
+            )
+        )
+        return exact[0]
+
     state = candidate.get("state_name")
     matches = []
     for gauge in gauges:
+        if gauge.get("usgs_id"):
+            continue
         gauge_state = (gauge.get("state") or {}).get("name")
         if state and gauge_state and state != gauge_state:
             continue
@@ -131,10 +176,12 @@ def enrich_candidates(
         if gauge:
             row["nwps_lid"] = gauge.get("lid")
             row["nwps_match"] = True
-            row["nwps_forecast"] = bool((gauge.get("pedts") or {}).get("forecast"))
+            row["nwps_forecast"] = bool(gauge.get("nwps_forecast"))
+            row["nwps_forecast_status"] = gauge.get("forecast_status")
         else:
             row["nwps_lid"] = None
             row["nwps_match"] = False
             row["nwps_forecast"] = False
+            row["nwps_forecast_status"] = None
         enriched.append(row)
     return enriched
