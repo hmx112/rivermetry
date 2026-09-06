@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import httpx
 
 from rivermetry.adapters.base import UpstreamDataError, UpstreamSchemaError
+from rivermetry.selection import demand_score as launch_demand_score
 
 COLLECTIONS_BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections"
 LATEST_URL = f"{COLLECTIONS_BASE}/latest-continuous/items"
@@ -225,40 +226,35 @@ def discover_usgs_candidates(
         data_quality = 35 if age_minutes <= 30 else 25
         drainage_area = props.get("drainage_area")
         history_score = 8 if drainage_area else 5
-        demand_score = 8
-        if any(
-            token in name.upper() for token in (" RIVER ", " CREEK ", " FORK ", " AT ", " NR ")
-        ):
-            demand_score += 4
-        qualified.append(
-            {
-                "location_id": f"us-{region}-{station_id}",
-                "status": "candidate",
-                "country_code": "us",
-                "region_code": region,
-                "slug": _slug(name),
-                "river_name": name.split(" AT ")[0].split(" NR ")[0].title(),
-                "station_name": name.title(),
-                "observation_provider": "usgs",
-                "station_id": station_id,
-                "latitude": coordinates[1],
-                "longitude": coordinates[0],
-                "timezone": _timezone(props.get("time_zone_abbreviation")),
-                "state_name": state_name,
-                "drainage_area": drainage_area,
-                "hard_gate": True,
-                "data_quality_score": data_quality,
-                "demand_score": demand_score,
-                "history_score": history_score,
-                "geographic_score": 10,
-                "nearby_score": 3,
-                "nwps_match": False,
-            }
-        )
+        candidate = {
+            "location_id": f"us-{region}-{station_id}",
+            "status": "candidate",
+            "country_code": "us",
+            "region_code": region,
+            "slug": _slug(name),
+            "river_name": name.split(" AT ")[0].split(" NR ")[0].title(),
+            "station_name": name.title(),
+            "observation_provider": "usgs",
+            "station_id": station_id,
+            "latitude": coordinates[1],
+            "longitude": coordinates[0],
+            "timezone": _timezone(props.get("time_zone_abbreviation")),
+            "state_name": state_name,
+            "drainage_area": drainage_area,
+            "hard_gate": True,
+            "data_quality_score": data_quality,
+            "history_score": history_score,
+            "geographic_score": 10,
+            "nearby_score": 3,
+            "nwps_match": False,
+        }
+        candidate["demand_score"] = launch_demand_score(candidate)
+        qualified.append(candidate)
     qualified.sort(
         key=lambda item: (
             -item["data_quality_score"],
             -item["demand_score"],
+            -float(item.get("drainage_area") or 0),
             item["station_id"],
         )
     )
