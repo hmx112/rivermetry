@@ -5,7 +5,9 @@ on:
   workflow_dispatch:
 jobs:
   refresh:
+    if: ${{ github.event_name == 'workflow_dispatch' || (vars.BASE_URL != '' && vars.CLOUDFLARE_PAGES_PROJECT != '') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -21,10 +23,16 @@ jobs:
           SITE_NAME: ${{ vars.SITE_NAME || 'Rivermetry' }}
           BASE_URL: ${{ vars.BASE_URL || 'https://rivermetry.example' }}
           WORKER_BASE_URL: ${{ vars.WORKER_BASE_URL || 'https://current.rivermetry.example' }}
-        run: rivermetry refresh-static --output dist
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: rivermetry refresh-static --output dist --workers 8
       - run: rivermetry export-worker-allowlist
+      - name: Validate Pages deployment configuration
+        if: ${{ vars.BASE_URL != '' && vars.CLOUDFLARE_PAGES_PROJECT != '' }}
+        run: |
+          test -n "$CF_API_TOKEN" || { echo 'CLOUDFLARE_API_TOKEN is missing'; exit 2; }
+          test -n "$CF_ACCOUNT_ID" || { echo 'CLOUDFLARE_ACCOUNT_ID is missing'; exit 2; }
       - name: Deploy Pages
-        if: ${{ vars.BASE_URL != '' && vars.CLOUDFLARE_PAGES_PROJECT != '' && env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != '' }}
+        if: ${{ vars.BASE_URL != '' && vars.CLOUDFLARE_PAGES_PROJECT != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
