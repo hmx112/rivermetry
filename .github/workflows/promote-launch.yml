@@ -1,17 +1,6 @@
 name: Validate Launch Promotion
 on:
   workflow_dispatch:
-  push:
-    branches: [bootstrap/rivermetry-release1]
-    paths:
-      - '.github/workflows/promote-launch.yml'
-      - 'src/rivermetry/promotion.py'
-      - 'scripts/promote_launch.py'
-      - 'src/rivermetry/discovery.py'
-      - 'src/rivermetry/enrichment.py'
-      - 'src/rivermetry/selection.py'
-      - 'scripts/select_launch.py'
-      - 'tests/test_promotion.py'
 permissions:
   contents: write
 jobs:
@@ -69,7 +58,7 @@ jobs:
             echo "Validated registry already current"
           else
             git commit -m "data: promote validated 150-location launch registry"
-            git push origin HEAD:bootstrap/rivermetry-release1
+            git push origin HEAD:${GITHUB_REF_NAME}
           fi
       - uses: actions/upload-artifact@v4
         with:
