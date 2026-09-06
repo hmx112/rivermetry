@@ -1,10 +1,17 @@
-from rivermetry.enrichment import enrich_candidates, fetch_nwps_gauges, match_nwps
+from rivermetry.enrichment import enrich_candidates, match_nwps, parse_nwps_gauges_report
+
+
+NWPS_REPORT = (
+    '"location name","nws shef id","usgs id","latitude","longitude","state",'
+    '"forecast status","in service"\n'
+    '"Test River","TEST1","11264500",37.7001,-119.5001,"CA",'
+    '"Forecasts are issued routinely year-round.",true\n'
+)
 
 
 class Response:
-    def __init__(self, payload=None, text=""):
+    def __init__(self, payload=None):
         self.payload = payload
-        self.text = text
 
     def raise_for_status(self):
         return None
@@ -33,16 +40,6 @@ class Client:
                 )
         return Response({"features": features})
 
-    def get(self, url, *, headers, timeout):
-        return Response(
-            text=(
-                '"location name","nws shef id","usgs id","latitude","longitude","state",'
-                '"forecast status","in service"\n'
-                '"Test River","TEST1","11264500",37.7001,-119.5001,"CA",'
-                '"Forecasts are issued routinely year-round.",true\n'
-            )
-        )
-
 
 def candidate(state="California"):
     return {
@@ -56,7 +53,8 @@ def candidate(state="California"):
 
 
 def test_enrichment_adds_history_and_nwps_forecast():
-    rows = enrich_candidates(Client(), [candidate()])
+    gauges = parse_nwps_gauges_report(NWPS_REPORT)
+    rows = enrich_candidates(Client(), [candidate()], nwps_gauges=gauges)
     assert len(rows) == 1
     assert rows[0]["history_years"] > 20
     assert rows[0]["nwps_lid"] == "TEST1"
@@ -64,11 +62,11 @@ def test_enrichment_adds_history_and_nwps_forecast():
 
 
 def test_enrichment_excludes_non_us_launch_regions():
-    assert enrich_candidates(Client(), [candidate("British Columbia")]) == []
+    assert enrich_candidates(Client(), [candidate("British Columbia")], nwps_gauges=[]) == []
 
 
 def test_static_nwps_report_maps_exact_usgs_id_and_forecast_configuration():
-    gauges = fetch_nwps_gauges(Client())
+    gauges = parse_nwps_gauges_report(NWPS_REPORT)
 
     assert gauges[0]["usgs_id"] == "11264500"
     assert gauges[0]["lid"] == "TEST1"
