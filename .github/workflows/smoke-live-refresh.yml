@@ -39,3 +39,4 @@ jobs:
           assert with_charts >= 145
           assert with_forecast >= 100
           PY
+      # This workflow is temporary and will be removed after the launch smoke test passes.
