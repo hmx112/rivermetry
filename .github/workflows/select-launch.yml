@@ -9,6 +9,7 @@ on:
       - 'src/rivermetry/enrichment.py'
       - 'src/rivermetry/selection.py'
       - 'scripts/select_launch.py'
+      - 'tests/test_discovery.py'
       - 'tests/test_enrichment.py'
       - 'tests/test_selection.py'
 jobs:
