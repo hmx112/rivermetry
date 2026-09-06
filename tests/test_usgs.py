@@ -36,6 +36,19 @@ def test_series_sorting():
     assert result["water_level"][0].value == 4.1
 
 
+def test_series_ignores_null_quality_gaps_instead_of_failing_station():
+    payload = {
+        "features": [
+            {"properties": {"parameter_code": "00065", "value": None, "time": "2026-09-05T00:30:00Z"}},
+            {"properties": {"parameter_code": "00065", "value": "4.2", "time": "2026-09-05T01:00:00Z"}},
+        ]
+    }
+
+    result = normalize_series_records(payload)
+
+    assert [point.value for point in result["water_level"]] == [4.2]
+
+
 def test_daily_mean_accepts_date_only_time_and_returns_newest_first():
     payload = {
         "features": [
