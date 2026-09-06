@@ -67,8 +67,8 @@ def normalize_series_records(payload: dict[str, Any]) -> dict[str, tuple[Observa
         try:
             value = float(props["value"])
             observed_at = _dt(props["time"])
-        except (KeyError, TypeError, ValueError) as exc:
-            raise UpstreamSchemaError("USGS series record is malformed") from exc
+        except (KeyError, TypeError, ValueError):
+            continue
         if not math.isfinite(value):
             continue
         buckets[PARAMETERS[parameter]][observed_at] = ObservationSeriesPoint(value, observed_at)
