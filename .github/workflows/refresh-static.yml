@@ -15,13 +15,13 @@ jobs:
       - run: python -m pytest -v && python -m ruff check .
       - name: Build static output
         env:
-          SITE_NAME: ${{ vars.SITE_NAME }}
-          BASE_URL: ${{ vars.BASE_URL }}
-          WORKER_BASE_URL: ${{ vars.WORKER_BASE_URL }}
+          SITE_NAME: ${{ vars.SITE_NAME || 'Rivermetry' }}
+          BASE_URL: ${{ vars.BASE_URL || 'https://rivermetry.example' }}
+          WORKER_BASE_URL: ${{ vars.WORKER_BASE_URL || 'https://current.rivermetry.example' }}
         run: rivermetry refresh-static --output dist
       - run: rivermetry export-worker-allowlist
       - name: Deploy Pages
-        if: ${{ vars.BASE_URL != '' && vars.CLOUDFLARE_PAGES_PROJECT != '' }}
+        if: ${{ vars.BASE_URL != '' && vars.CLOUDFLARE_PAGES_PROJECT != '' && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
