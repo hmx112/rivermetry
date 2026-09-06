@@ -150,3 +150,63 @@ def test_discovery_uses_cql_in_instead_of_unbounded_metadata_scan():
     _, _, _, body = client.post_calls[0]
     assert body["op"] == "in"
     assert body["args"][0] == {"property": "id"}
+
+
+class SameStateDemandClient(FakeClient):
+    def get(self, url, *, params, headers, timeout):
+        self.get_calls.append((url, params.copy()))
+        code = params.get("parameter_code")
+        return FakeResponse(
+            {
+                "features": [
+                    {
+                        "properties": {
+                            "monitoring_location_id": monitoring_id,
+                            "parameter_code": code,
+                            "time": "2099-09-05T10:30:00+00:00",
+                        }
+                    }
+                    for monitoring_id in ("USGS-00000001", "USGS-11264500")
+                ],
+                "links": [],
+            }
+        )
+
+    def post(self, url, *, params, headers, json, timeout):
+        self.post_calls.append((url, params.copy(), headers.copy(), json))
+        return FakeResponse(
+            {
+                "features": [
+                    {
+                        "id": "USGS-00000001",
+                        "geometry": {"type": "Point", "coordinates": [-121.0, 38.0]},
+                        "properties": {
+                            "monitoring_location_number": "00000001",
+                            "monitoring_location_name": "TINY CREEK AT SAMPLE",
+                            "state_name": "California",
+                            "state_code": "06",
+                            "time_zone_abbreviation": "PDT",
+                            "drainage_area": 10.0,
+                        },
+                    },
+                    {
+                        "id": "USGS-11264500",
+                        "geometry": {"type": "Point", "coordinates": [-119.5, 37.7]},
+                        "properties": {
+                            "monitoring_location_number": "11264500",
+                            "monitoring_location_name": "MERCED RIVER AT HAPPY ISLES BRIDGE NR YOSEMITE",
+                            "state_name": "California",
+                            "state_code": "06",
+                            "time_zone_abbreviation": "PDT",
+                            "drainage_area": 181.0,
+                        },
+                    },
+                ]
+            }
+        )
+
+
+def test_discovery_state_quota_prefers_search_value_over_station_number():
+    candidates = discover_usgs_candidates(SameStateDemandClient(), limit=1)
+
+    assert [item["station_id"] for item in candidates] == ["11264500"]
