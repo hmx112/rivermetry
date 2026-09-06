@@ -1,0 +1,66 @@
+name: Validate Launch Promotion
+on:
+  workflow_dispatch:
+  push:
+    branches: [bootstrap/rivermetry-release1]
+    paths:
+      - '.github/workflows/promote-launch.yml'
+      - 'src/rivermetry/promotion.py'
+      - 'scripts/promote_launch.py'
+      - 'src/rivermetry/discovery.py'
+      - 'src/rivermetry/enrichment.py'
+      - 'src/rivermetry/selection.py'
+      - 'scripts/select_launch.py'
+      - 'tests/test_promotion.py'
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -v
+      - run: python -m ruff check .
+      - name: Discover 900 real USGS candidates
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: rivermetry discover-usgs --output usgs-candidates.json --limit 900
+      - name: Select 150 launch locations
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: python scripts/select_launch.py --input usgs-candidates.json --output-dir launch-artifacts --limit 150
+      - name: Promote validated launch registry
+        run: python scripts/promote_launch.py --input launch-artifacts/launch-preview.json --output launch-artifacts/locations-live.json
+      - name: Enforce release gate
+        run: rivermetry release-gate --registry launch-artifacts/locations-live.json
+      - name: Export Worker allowlist
+        run: rivermetry export-worker-allowlist --registry launch-artifacts/locations-live.json --output launch-artifacts/live-locations.json
+      - name: Build production-shape site
+        env:
+          BASE_URL: https://rivermetry.example
+          WORKER_BASE_URL: https://current.rivermetry.example
+        run: rivermetry build --registry launch-artifacts/locations-live.json --output dist
+      - run: python -m rivermetry.build.guard dist
+      - name: Verify launch output counts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          registry=json.loads(Path('launch-artifacts/locations-live.json').read_text())
+          allowlist=json.loads(Path('launch-artifacts/live-locations.json').read_text())
+          sitemap=Path('dist/sitemap.xml').read_text()
+          assert len(registry) == 150
+          assert len(allowlist) == 150
+          assert sitemap.count('<url>') >= 150
+          print('registry=150 allowlist=150 sitemap_urls=', sitemap.count('<url>'))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rivermetry-validated-launch
+          path: |
+            launch-artifacts/locations-live.json
+            launch-artifacts/live-locations.json
+            launch-artifacts/launch-selection-report.json
+            dist/
