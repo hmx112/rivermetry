@@ -22,10 +22,10 @@ jobs:
       - run: python -m pip install -e '.[dev]'
       - run: python -m pytest -v
       - run: python -m ruff check .
-      - name: Discover 450 real USGS candidates
+      - name: Discover 900 real USGS candidates
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
-        run: rivermetry discover-usgs --output usgs-candidates.json --limit 450
+        run: rivermetry discover-usgs --output usgs-candidates.json --limit 900
       - name: Enrich and select 150 preview locations
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
