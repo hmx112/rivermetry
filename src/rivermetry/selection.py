@@ -102,19 +102,30 @@ def select_launch_locations(items: list[dict], limit: int = 150) -> list[dict]:
 
     selected: list[dict] = []
     selected_ids: set[str] = set()
+    selected_nwps_lids: set[str] = set()
+
+    def add(item: dict) -> bool:
+        if item["location_id"] in selected_ids:
+            return False
+        nwps_lid = str(item.get("nwps_lid") or "")
+        if nwps_lid and nwps_lid in selected_nwps_lids:
+            return False
+        selected.append(item)
+        selected_ids.add(item["location_id"])
+        if nwps_lid:
+            selected_nwps_lids.add(nwps_lid)
+        return True
+
     for state in sorted(by_state, key=lambda name: (-by_state[name][0]["score"], name)):
         if len(selected) >= limit:
             break
-        item = by_state[state][0]
-        selected.append(item)
-        selected_ids.add(item["location_id"])
+        for item in by_state[state]:
+            if add(item):
+                break
 
     for item in eligible:
         if len(selected) >= limit:
             break
-        if item["location_id"] in selected_ids:
-            continue
-        selected.append(item)
-        selected_ids.add(item["location_id"])
+        add(item)
 
     return selected
