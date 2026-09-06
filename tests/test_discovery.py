@@ -156,15 +156,20 @@ class SameStateDemandClient(FakeClient):
     def get(self, url, *, params, headers, timeout):
         self.get_calls.append((url, params.copy()))
         code = params.get("parameter_code")
+        coordinates = {
+            "USGS-00000001": [-121.0, 38.0],
+            "USGS-11264500": [-119.5, 37.7],
+        }
         return FakeResponse(
             {
                 "features": [
                     {
+                        "geometry": {"type": "Point", "coordinates": coordinates[monitoring_id]},
                         "properties": {
                             "monitoring_location_id": monitoring_id,
                             "parameter_code": code,
                             "time": "2099-09-05T10:30:00+00:00",
-                        }
+                        },
                     }
                     for monitoring_id in ("USGS-00000001", "USGS-11264500")
                 ],
