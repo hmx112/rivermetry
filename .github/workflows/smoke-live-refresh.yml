@@ -1,0 +1,41 @@
+name: Smoke Live Refresh
+on:
+  push:
+    branches: [bootstrap/rivermetry-release1]
+    paths: ['.github/workflows/smoke-live-refresh.yml']
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[dev]'
+      - run: rivermetry release-gate
+      - name: Refresh all 150 live locations from official sources
+        env:
+          BASE_URL: https://rivermetry.example
+          WORKER_BASE_URL: https://current.rivermetry.example
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: rivermetry refresh-static --output smoke-dist --workers 8
+      - run: python -m rivermetry.build.guard smoke-dist
+      - name: Verify live snapshot output
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          pages=[]
+          for path in Path('smoke-dist/us').rglob('index.html'):
+              text=path.read_text(errors='ignore')
+              if 'data-current-location=' in text:
+                  pages.append((path,text))
+          with_static=sum('data-static-observed=""' not in text for _,text in pages)
+          with_charts=sum('<polyline' in text for _,text in pages)
+          with_forecast=sum('Official NWS Forecast' in text for _,text in pages)
+          print(f'location_pages={len(pages)} static_observed={with_static} charts={with_charts} forecasts={with_forecast}')
+          assert len(pages) == 150
+          assert with_static == 150
+          assert with_charts >= 145
+          assert with_forecast >= 100
+          PY
