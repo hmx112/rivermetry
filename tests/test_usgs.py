@@ -36,7 +36,7 @@ def test_series_sorting():
     assert result["water_level"][0].value == 4.1
 
 
-def test_daily_mean_streamflow_is_chronological_and_ignores_other_statistics():
+def test_daily_mean_accepts_date_only_time_and_returns_newest_first():
     payload = {
         "features": [
             {
@@ -44,7 +44,7 @@ def test_daily_mean_streamflow_is_chronological_and_ignores_other_statistics():
                     "parameter_code": "00060",
                     "statistic_id": "00003",
                     "value": "120",
-                    "time": "2026-09-05T00:00:00Z",
+                    "time": "2026-09-05",
                 }
             },
             {
@@ -52,7 +52,7 @@ def test_daily_mean_streamflow_is_chronological_and_ignores_other_statistics():
                     "parameter_code": "00060",
                     "statistic_id": "00001",
                     "value": "999",
-                    "time": "2026-09-05T00:00:00Z",
+                    "time": "2026-09-05",
                 }
             },
             {
@@ -60,10 +60,10 @@ def test_daily_mean_streamflow_is_chronological_and_ignores_other_statistics():
                     "parameter_code": "00060",
                     "statistic_id": "00003",
                     "value": "100",
-                    "time": "2026-09-04T00:00:00Z",
+                    "time": "2026-09-04",
                 }
             },
         ]
     }
 
-    assert normalize_daily_records(payload) == [100.0, 120.0]
+    assert normalize_daily_records(payload) == [120.0, 100.0]
