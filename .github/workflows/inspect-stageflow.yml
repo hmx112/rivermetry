@@ -18,12 +18,13 @@ jobs:
               with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
           meta=fetch('https://api.water.noaa.gov/nwps/v1/gauges/CLFA3')
           sf=fetch('https://api.water.noaa.gov/nwps/v1/gauges/CLFA3/stageflow')
-          def shape(obj,depth=0):
-              if depth>2:return type(obj).__name__
-              if isinstance(obj,dict):return {k:shape(v,depth+1) for k,v in list(obj.items())[:30]}
-              if isinstance(obj,list):return [shape(v,depth+1) for v in obj[:2]]
-              return obj
-          open('nwps-stageflow-schema.json','w').write(json.dumps({'metadata':shape(meta),'stageflow':shape(sf)},indent=2))
+          out={
+            'forecast_header': {k:v for k,v in (sf.get('forecast') or {}).items() if k!='data'},
+            'forecast_rows': (sf.get('forecast') or {}).get('data',[])[:2],
+            'flood': meta.get('flood'),
+            'status': meta.get('status'),
+          }
+          open('nwps-stageflow-schema.json','w').write(json.dumps(out,indent=2))
           PY
       - uses: actions/upload-artifact@v4
         with:
