@@ -116,11 +116,27 @@ def select_launch_locations(items: list[dict], limit: int = 150) -> list[dict]:
             selected_nwps_lids.add(nwps_lid)
         return True
 
+    # National breadth: take the best eligible gauge from every represented state first.
     for state in sorted(by_state, key=lambda name: (-by_state[name][0]["score"], name)):
         if len(selected) >= limit:
             break
         for item in by_state[state]:
             if add(item):
+                break
+
+    # Search-demand depth: priority states should have up to three strong pages before
+    # remaining slots are filled nationally by score.
+    for state in sorted(PRIORITY_STATES):
+        if len(selected) >= limit:
+            break
+        target = min(3, len(by_state.get(state, [])))
+        while sum(1 for item in selected if item["state_name"] == state) < target:
+            added = False
+            for item in by_state.get(state, []):
+                if add(item):
+                    added = True
+                    break
+            if not added:
                 break
 
     for item in eligible:
